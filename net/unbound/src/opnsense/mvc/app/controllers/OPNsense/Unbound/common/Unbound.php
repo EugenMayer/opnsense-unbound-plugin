@@ -29,6 +29,7 @@
 namespace OPNsense\Unbound\common;
 // yeah, why should plugins.inc.d/openvpn.inc include all the symbols it is using..
 require_once("util.inc");
+require_once("xmlparse.inc");
 require_once("plugins.inc.d/unbound.inc");
 
 use \OPNsense\Core\Config;
@@ -57,7 +58,8 @@ class Unbound
      */
     static function createHostEntryInConfig(HostEntry $hostEntry, $generateUnboundConfig = false)
     {
-        $config = Config::getInstance()->toArray();
+        // listtags is important, otherwise hosts will not be an array of hosts, but flatted
+        $config = Config::getInstance()->toArray(listtags());
         $config['unbound']['hosts'][] = $hostEntry->toLegacy();
         Config::getInstance()->fromArray($config);
         Config::getInstance()->save();
@@ -75,7 +77,8 @@ class Unbound
      */
     static function updateHostEntryInConfig(HostEntry $hostEntry, $generateUnboundConfig = false)
     {
-        $config = Config::getInstance()->toArray();
+        // listtags is important, otherwise hosts will not be an array of hosts, but flatted
+        $config = Config::getInstance()->toArray(listtags());
         for ($i = 0; $i <= count($config['unbound']['hosts']); $i++) {
             // search all hosts for the entry we look for, host and domain must match
             if ($config['unbound']['hosts'][$i]['host'] == $hostEntry->host
@@ -100,7 +103,8 @@ class Unbound
      */
     static function deleteHostEntryInConfig(HostEntry $hostEntry, $generateUnboundConfig = false)
     {
-        $config = Config::getInstance()->toArray();
+        // listtags is important, otherwise hosts will not be an array of hosts, but flatted
+        $config = Config::getInstance()->toArray(listtags());
         for ($i = 0; $i <= count($config['unbound']['hosts']); $i++) {
             // search all hosts for the entry we look for, host and domain must match
             if ($config['unbound']['hosts'][$i]['host'] == $hostEntry->host
@@ -138,16 +142,18 @@ class Unbound
      */
     static function getHostEntryByFQDN($host, $domain)
     {
-        $config = Config::getInstance()->toArray();
-        if(!isset($config['unbound']['hosts'])) {
+        $config = Config::getInstance()->object();
+        if(!isset($config->unbound->hosts)) {
             return null;
         }
-        foreach ($config['unbound']['hosts'] as $hostentry) {
+
+        foreach($config->unbound->hosts as $hostEntryObject) {
             // search all hosts for the entry we look for, host and domain must match
-            if ($hostentry['host'] == $host && $hostentry['domain'] == $domain) {
-                return HostEntry::loadFromLegacy($hostentry);
+            if ($hostEntryObject->host == $host && $hostEntryObject->domain == $domain) {
+                return HostEntry::loadFromLegacy((array) $hostEntryObject);
             }
         }
+
         return null;
     }
 
@@ -157,18 +163,18 @@ class Unbound
      */
     static function getHostEntryByIp($ip)
     {
-        $config = Config::getInstance()->toArray();
-
-        if(!isset($config['unbound']['hosts'])) {
+        // we cannot use toArray since hosts will be unserialized the wrong way
+        $config = Config::getInstance()->object();
+        if(!isset($config->unbound->hosts)) {
             return null;
         }
-
-        foreach($config['unbound']['hosts'] as $hostentry) {
+        foreach($config->unbound->hosts as $hostEntryObject) {
             // search all hosts for the entry we look for, host and domain must match
-            if ($hostentry['ip'] == $ip) {
-                return HostEntry::loadFromLegacy($hostentry);
+            if ($hostEntryObject->ip == $ip) {
+                return HostEntry::loadFromLegacy((array) $hostEntryObject);
             }
         }
+
         return null;
     }
 
@@ -178,24 +184,16 @@ class Unbound
      */
     static function getLegacyHostEntries()
     {
-        $configObj = Config::getInstance()->object();
-        if (isset($configObj->unbound) && isset($configObj->unbound->{'hosts'})) {
-            $hostEntries = array();
-            $hostEntryAttribs = array_keys(get_class_vars('OPNsense\Unbound\common\HostEntry'));
-            // odd need of parsing them here, otherwise the result gets oddly transpiled
-            foreach ($configObj->unbound->{'hosts'} as $hostEntryXML) {
-                $obj = json_decode(json_encode($hostEntryXML));
-                $hostEntry = new HostEntry();
-                // map all our legacy attributes on our helper class
-                foreach ($hostEntryAttribs as $attr) {
-                    if (isset($obj->{$attr})) {
-                        $hostEntry->{$attr} = $obj->{$attr};
-                    }
-                }
-                $hostEntries[] = $hostEntry;
-            }
-            return $hostEntries;
+        $config = Config::getInstance()->object();
+        if(!isset($config->unbound->hosts)) {
+            return [];
         }
-        return [];
+        $hostEntries = [];
+        foreach($config->unbound->hosts as $hostEntryObject) {
+            // search all hosts for the entry we look for, host and domain must match
+            $hostEntries[] = HostEntry::loadFromLegacy((array) $hostEntryObject);
+        }
+
+        return $hostEntries;
     }
 }
