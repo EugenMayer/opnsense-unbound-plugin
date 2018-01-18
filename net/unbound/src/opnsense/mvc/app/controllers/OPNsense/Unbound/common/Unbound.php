@@ -139,6 +139,9 @@ class Unbound
     static function getHostEntryByFQDN($host, $domain)
     {
         $config = Config::getInstance()->toArray();
+        if(!isset($config['unbound']['hosts'])) {
+            return null;
+        }
         foreach ($config['unbound']['hosts'] as $hostentry) {
             // search all hosts for the entry we look for, host and domain must match
             if ($hostentry['host'] == $host && $hostentry['domain'] == $domain) {
@@ -155,6 +158,11 @@ class Unbound
     static function getHostEntryByIp($ip)
     {
         $config = Config::getInstance()->toArray();
+
+        if(!isset($config['unbound']['hosts'])) {
+            return null;
+        }
+
         foreach($config['unbound']['hosts'] as $hostentry) {
             // search all hosts for the entry we look for, host and domain must match
             if ($hostentry['ip'] == $ip) {
@@ -184,10 +192,10 @@ class Unbound
                         $hostEntry->{$attr} = $obj->{$attr};
                     }
                 }
-                $hostEntries[$hostEntry->common_name] = $hostEntry;
+                $hostEntries[] = $hostEntry;
             }
             return $hostEntries;
         }
-        return NULL;
+        return [];
     }
 }

@@ -34,7 +34,7 @@ Vagrant.configure("2") do |config|
   config.vm.synced_folder ".", "/vagrant", disabled: true
 
   config.vm.define 'opnsense', autostart: false do |test|
-    test.vm.synced_folder "./", "/root/plugin", type: "rsync",
+    test.vm.synced_folder "./", "/root/plugins", type: "rsync",
       rsync__chown: false,
       rsync__exclude: "./plugins/.git/",
       rsync__rsync_path: "/usr/local/bin/rsync"
@@ -53,15 +53,15 @@ Vagrant.configure("2") do |config|
       run: "once"
 
     # replace the public ssh key for the root user with the one vagrant deployed for comms before we restart - or we lock vagrant out
-    test.vm.provision "inject-pubkey-into-config", type: "local_shell", command: "export PUB=$(ssh-keygen -f .vagrant/machines/opnsense/virtualbox/private_key -y | base64) && xmlstarlet ed --inplace -u '/opnsense/system/user/authorizedkeys' -v \"$PUB\" config-radius-openvpn.xml"
+    test.vm.provision "inject-pubkey-into-config", type: "local_shell", command: "export PUB=$(ssh-keygen -f .vagrant/machines/opnsense/virtualbox/private_key -y | base64) && xmlstarlet ed --inplace -u '/opnsense/system/user/authorizedkeys' -v \"$PUB\" config-unbound.xml"
     # apply our configuration so we have a configured radius with users and clients and an active openvpn server
-    test.vm.provision "file", source: "./config-radius-openvpn.xml", destination: "/conf/config.xml"
+    test.vm.provision "file", source: "./config-unbound.xml", destination: "/conf/config.xml"
     test.vm.provision "shell",
       inline: "echo 'rebooting to apply config' && reboot"
 
     test.vm.provision "sleep-for-reboot", type: "local_shell", command: "echo 'waiting for the reboot' && sleep 50"
 
     test.vm.provision "shell",
-      inline: "cd /root/plugin/net/unbound && make package && pkg add work/pkg/*.txz"
+      inline: "cd /root/plugins/net/unbound && make package && pkg add work/pkg/*.txz"
   end
 end

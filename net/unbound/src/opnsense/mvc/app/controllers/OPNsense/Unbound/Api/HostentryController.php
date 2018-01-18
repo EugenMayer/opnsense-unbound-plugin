@@ -14,8 +14,12 @@ use OPNsense\Unbound\common\Unbound;
  * @property \Phalcon\Http\Request request
  * @package OPNsense\Unbound\Api
  */
-class HostEntryController extends ApiMutableModelControllerBase
+class HostentryController extends ApiMutableModelControllerBase
 {
+    // keep those 2 ladies here, even though that model does not exist / we do not need it yet
+    // otherwise the controller cannot get instantiated
+    static protected $internalModelName = 'Ccd';
+    static protected $internalModelClass = '\OPNsense\Unbound\Hostentry';
     /**
      * Payload must look like this
      * {
@@ -48,11 +52,19 @@ class HostEntryController extends ApiMutableModelControllerBase
     }
 
     /**
-     * @param string|null $uuid item unique id
+     * @param null $host
+     * @param null $domain
      * @return array
      */
-    public function getHostEntryAction($host, $domain)
+    public function getHostEntryAction($host = null, $domain = null)
     {
+        if($host == null && $domain == null) {
+            return Unbound::getLegacyHostEntries();
+        }
+
+        if($host == null && $domain != null || $host != null && $domain = null) {
+            return ["result" => "failed", 'wrong_request' => "you need to set host and domain as url arguments, not just one, e.g: api/unbound/hostentry/getHostEntry/myhostname/mydomain.tld"];
+        }
         $match = Unbound::getHostEntryByFQDN($host, $domain);
         if($match == NULL) {
             return [];
@@ -62,7 +74,7 @@ class HostEntryController extends ApiMutableModelControllerBase
     }
 
 
-    public function delHostEntryAction($uuid)
+    public function delHostEntryAction()
     {
         if ($this->request->isPost() && $this->request->hasPost("hostentry")) {
             $dts = $this->request->getPost("hostentry");
