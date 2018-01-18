@@ -6,6 +6,8 @@ You can for now do:
  
   - CRUD host entries
   
+**Those operations will be transparent to the actual (legacy) plugin and e.g. will show up in the UI**  
+  
 ### Installation
 
 ```bash
