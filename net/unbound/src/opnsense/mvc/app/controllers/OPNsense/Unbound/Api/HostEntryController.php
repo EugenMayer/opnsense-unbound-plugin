@@ -20,7 +20,7 @@ use OPNsense\Openvpn\common\Unbound;
 class HostEntryController extends ApiMutableModelControllerBase
 {
     static protected $internalModelName = 'Ccd';
-    static protected $internalModelClass = '\OPNsense\Openvpn\Ccd';
+    static protected $internalModelClass = '\OPNsense\Unbound\Ccd';
 
     /**
      * Payload must look like this
@@ -33,9 +33,9 @@ class HostEntryController extends ApiMutableModelControllerBase
      * @param string|null $uuid item unique id
      * @return array
      */
-    public function setCcdAction($uuid = null)
+    public function setHostEntryAction($uuid = null)
     {
-        if ($this->request->isPost() && $this->request->hasPost("ccd")) {
+        if ($this->request->isPost() && $this->request->hasPost("hostentry")) {
             if ($uuid != null) {
                 $node = $this->getModel()->getNodeByReference("ccds.ccd.$uuid");
             } else {
@@ -58,46 +58,10 @@ class HostEntryController extends ApiMutableModelControllerBase
     }
 
     /**
-     * Payload must look like this
-     * {
-     *   "ccd": { "common_name":"newtest" }
-     * }
-     *
-     * in comparison to setCcdAction this method tries to find your given CCD by name
-     * it does find it, it rather does a update, otherwise and insert.
-     * So this will automatically update if a name matches an existing entry or create
-     * if that name yet does not exist
-     *
      * @param string|null $uuid item unique id
      * @return array
      */
-    public function setCcdByNameAction()
-    {
-        if ($this->request->isPost() && $this->request->hasPost("ccd")) {
-            $data = $this->request->getPost("ccd");
-            $lookupUuid = $this->getModel()->getUuidByCcdName($data['common_name']);
-            if ($lookupUuid == NULL) {
-                // create case
-                $node = $this->getModel()->ccds->ccd->Add();
-                $node->setNodes($data);
-            } else {
-                // update case
-                $node = $this->getModel()->getNodeByReference("ccds.ccd.$lookupUuid");
-                $node->setNodes($data);
-            }
-            $result = $this->validateAndSave($node, 'ccd');
-            Unbound::generateCCDconfigurationOnDisk([CcdDts::fromModelNode($data)]);
-            $result['modified_uuid'] = $this->getModel()->getUuidByCcdName($data['common_name']);
-            return $result;
-        }
-        return array("result" => "failed");
-    }
-
-    /**
-     * @param string|null $uuid item unique id
-     * @return array
-     */
-    public function getCcdAction($uuid = null)
+    public function getHostEntryAction($uuid = null)
     {
         if ($uuid == null) {
             // list all
@@ -113,7 +77,7 @@ class HostEntryController extends ApiMutableModelControllerBase
     }
 
 
-    public function delCcdAction($uuid)
+    public function delHostEntryAction($uuid)
     {
         $result = array('result' => 'failed');
         if ($this->request->isPost()) {

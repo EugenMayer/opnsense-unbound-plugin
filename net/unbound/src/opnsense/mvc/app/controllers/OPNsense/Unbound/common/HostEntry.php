@@ -31,39 +31,13 @@ namespace OPNsense\Unbound\common;
 
 class HostEntry
 {
-    public $common_name;
-    // CIDR
-    public $tunnel_network;
-    // CIDR
-    public $tunnel_networkv6;
-    // CIDR
-    public $local_network;
-    // CIDR
-    public $local_networkv6;
-    // CIDR
-    public $remote_network;
-    // CIDR
-    public $remote_network6;
-    // redirect gateway
-    public $gwredir;
-    /**
-     * if not empty, push will be reset. We aren`t using a boolean due to the legacy code
-     */
-    public $push_reset;
-    /**
-     * if not empty, client will be blocked. We aren`t using a boolean due to the legacy code
-     */
-    public $block = NULL;
-
-    /**
-     * @param string $netmask netmask as 255.255.255.0
-     * @return int prefix like 24 for the above
-     */
-    static public function netmaskToCIDRprefix($netmask) {
-        $long = ip2long($netmask);
-        $base = ip2long('255.255.255.255');
-        return 32-log(($long ^ $base)+1,2);
-    }
+    public $host;
+    public $domain;
+    public $rr;
+    public $ip;
+    public $mxprio;
+    public $mx;
+    public $descr;
 
     /**
      * @param array $ccdAsArray

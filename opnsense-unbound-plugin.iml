@@ -4,5 +4,16 @@
     <exclude-output />
     <content url="file://$MODULE_DIR$" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module-library">
+      <library name="PHP" type="php">
+        <CLASSES>
+          <root url="jar://$APPLICATION_PLUGINS_DIR$/phpstorm-library-plugin.jar!/Phalcon/Phalcon" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://$APPLICATION_PLUGINS_DIR$/phpstorm-library-plugin.jar!/Phalcon/Phalcon" />
+        </SOURCES>
+      </library>
+    </orderEntry>
   </component>
 </module>

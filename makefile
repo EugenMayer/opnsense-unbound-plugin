@@ -7,6 +7,9 @@ vagrant_exists:
 stop:
 	vagrant stop
 
+checkout_core:
+	( [[ -d vendor/core ]] && cd vendor/core && git pull ) || git clone https://github.com/opnsense/core vendor/core
+
 rm:	
 	vagrant destroy -f
 
