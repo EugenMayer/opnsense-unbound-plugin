@@ -33,7 +33,7 @@ class HostEntry
 {
     public $host;
     public $domain;
-    public $rr;
+    public $rr = "A";
     public $ip;
     public $mxprio;
     public $mx;
@@ -45,18 +45,52 @@ class HostEntry
      */
     static public function fromModelNode($ccdAsArray)
     {
-        $ccd_attributes = array_keys(get_class_vars('OPNsense\OpenVpn\common\CcdDts'));
+    }
 
-        $obj = (object) $ccdAsArray;
-        $ccd = new HostEntry();
+    public function toLegacy() {
+        return (array)$this;
+    }
 
-        // map all our legacy attributes on our helper class
-        foreach ($ccd_attributes as $attr) {
-            if (isset($obj->{$attr})) {
-                $ccd->{$attr} = $obj->{$attr};
+    public function toDts() {
+        return (array)$this;
+    }
+
+    /**
+     * @param array $dts
+     * @return HostEntry
+     */
+    static public function loadFromDTS($dts) {
+        $hostEntry = new HostEntry();
+        $hostEntryAttribs = array_keys(get_class_vars('OPNsense\Unbound\common\HostEntry'));
+        foreach($hostEntryAttribs as $attrib) {
+            if(isset($dts[$attrib])) {
+                $hostEntry->{$attrib} = $dts[$attrib];
             }
         }
 
-        return $ccd;
+        return $hostEntry;
+    }
+
+    /**
+     * @param array $legacyHostEntryArray
+     * @return HostEntry
+     */
+    static public function loadFromLegacy($legacyHostEntryArray) {
+        // for now those should match
+        return self::loadFromDTS($legacyHostEntryArray);
+    }
+
+    /**
+     * @param $dts
+     * @return bool if true, validation was fine
+     */
+    static public function validateDTS($dts) {
+        $mandatory = ['ip','host','domain'];
+        foreach($mandatory as $attrib) {
+            if(!isset($dts[$attrib])) {
+                return false;
+            }
+        }
+        return true;
     }
 }

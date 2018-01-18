@@ -44,26 +44,126 @@ class Unbound
     /**
      * @return void
      */
-    static public function generateHostEntries()
+    static public function generateHostEntriesOnDisk()
     {
         unbound_hosts_generate();
     }
 
 
-    static function addHostEntryInConfig(HostEntry $hostEntry)
+    /**
+     * @param HostEntry $hostEntry
+     * @param bool $generateUnboundConfig
+     * @return bool
+     */
+    static function createHostEntryInConfig(HostEntry $hostEntry, $generateUnboundConfig = false)
     {
-        // TODO
+        $config = Config::getInstance()->toArray();
+        $config['unbound']['hosts'][] = $hostEntry->toLegacy();
+        Config::getInstance()->fromArray($config);
+        Config::getInstance()->save();
+
+        if ($generateUnboundConfig) {
+            self::generateHostEntriesOnDisk();
+        }
+        return true;
     }
 
-    static function updateHostEntryInConfig(HostEntry $hostEntry)
+    /**
+     * @param HostEntry $hostEntry
+     * @param bool $generateUnboundConfig
+     * @return bool
+     */
+    static function updateHostEntryInConfig(HostEntry $hostEntry, $generateUnboundConfig = false)
     {
-        // TODO
+        $config = Config::getInstance()->toArray();
+        for ($i = 0; $i <= count($config['unbound']['hosts']); $i++) {
+            // search all hosts for the entry we look for, host and domain must match
+            if ($config['unbound']['hosts'][$i]['host'] == $hostEntry->host
+                && $config['unbound']['hosts'][$i]['domain'] == $hostEntry->domain) {
+                $config['unbound']['hosts'][$i] = $hostEntry->toLegacy();
+                Config::getInstance()->fromArray($config);
+                Config::getInstance()->save();
+                if ($generateUnboundConfig) {
+                    self::generateHostEntriesOnDisk();
+                }
+                return true;
+            }
+        }
+        return false;
     }
 
-    static function deleteHostEntryInConfig(HostEntry $hostEntry)
+
+    /**
+     * @param HostEntry $hostEntry
+     * @param bool $generateUnboundConfig
+     * @return bool
+     */
+    static function deleteHostEntryInConfig(HostEntry $hostEntry, $generateUnboundConfig = false)
     {
-        // TODO
+        $config = Config::getInstance()->toArray();
+        for ($i = 0; $i <= count($config['unbound']['hosts']); $i++) {
+            // search all hosts for the entry we look for, host and domain must match
+            if ($config['unbound']['hosts'][$i]['host'] == $hostEntry->host
+                && $config['unbound']['hosts'][$i]['domain'] == $hostEntry->domain) {
+                unset($config['unbound']['hosts'][$i]);
+                Config::getInstance()->fromArray($config);
+                Config::getInstance()->save();
+                if ($generateUnboundConfig) {
+                    self::generateHostEntriesOnDisk();
+                }
+                return true;
+            }
+        }
+        return false;
     }
+
+    /**
+     * @param $host
+     * @param $domain
+     * @return bool
+     */
+    static function existsHostEntryInConfig($host, $domain)
+    {
+        if (self::getHostEntryByFQDN($host, $domain) == null) {
+            return false;
+        }
+        // else
+        return true;
+    }
+
+    /**
+     * @param $host
+     * @param $domain
+     * @return HostEntry
+     */
+    static function getHostEntryByFQDN($host, $domain)
+    {
+        $config = Config::getInstance()->toArray();
+        foreach ($config['unbound']['hosts'] as $hostentry) {
+            // search all hosts for the entry we look for, host and domain must match
+            if ($hostentry['host'] == $host && $hostentry['domain'] == $domain) {
+                return HostEntry::loadFromLegacy($hostentry);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @param $ip
+     * @return HostEntry
+     */
+    static function getHostEntryByIp($ip)
+    {
+        $config = Config::getInstance()->toArray();
+        foreach($config['unbound']['hosts'] as $hostentry) {
+            // search all hosts for the entry we look for, host and domain must match
+            if ($hostentry['ip'] == $ip) {
+                return HostEntry::loadFromLegacy($hostentry);
+            }
+        }
+        return null;
+    }
+
 
     /**
      * @return HostEntry[]
@@ -89,10 +189,5 @@ class Unbound
             return $hostEntries;
         }
         return NULL;
-    }
-
-    static function hostEntryToLegacyStructure(HostEntry $hostEntry)
-    {
-        return (array)$hostEntry;
     }
 }
