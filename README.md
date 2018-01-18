@@ -20,7 +20,7 @@ Enable/install the plugin
 
 #### Create / Update Host Entry
 
-Send a `POST` payload on api/unbound/hostEntry/setHostEntry
+`POST` on `api/unbound/hostEntry/setHostEntry`
 ```
 {
   "hostentry": { 
@@ -36,26 +36,43 @@ If a host with that `domain` and `host` already exists, and update will be done,
 
 #### Delete Host Entry
 
-- Send a `POST` payload on api/unbound/hostEntry/delHostEntry
-```
-{
-  "hostentry": { 
-    "ip": "10.1.1.1",
-    "domain": "foo.tld",
-    "host": "bar"
-  }
-}
-```
+`POST`  on `api/unbound/hostEntry/delHostEntry`
+- Payload
+    ```
+    {
+      "hostentry": { 
+        "ip": "10.1.1.1",
+        "domain": "foo.tld",
+        "host": "bar"
+      }
+    }
+    ```
 
-If the hostentry matching your domain / host will be deleted
+-> If the hostentry matching the given domain / host will be deleted
+
+
+Alternatively by IP
+
+`POST`  on `api/unbound/hostEntry/delHostEntryByIp`
+- Payload
+    ```
+    {
+      "hostentry": { 
+        "ip": "10.1.1.1",
+      }
+    }
+    ```
+
+If the hostentry matching the given ip will be deleted
 
 #### Get Host Entry(s)
 
-- Send a `GET` payload on api/unbound/hostEntry/getHostEntry 
-This will return all host entries
+`GET` on `api/unbound/hostEntry/getHostEntry` 
+- This will return all host entries
 
-- Send a `GET` payload on api/unbound/hostEntry/getHostEntry/<host>/<domain>
-This will return you the hostEntry matching this host/domain
+`GET` on` api/unbound/hostEntry/getHostEntry/<host>|<domain>`
+- *IMPORTANT* its an `|` and not a slash!! important.
+- This will return you the hostEntry matching this host/domain. 
 
 ## Development
 
