@@ -38,6 +38,7 @@ Vagrant.configure("2") do |config|
       rsync__chown: false,
       rsync__exclude: "./plugins/.git/",
       rsync__rsync_path: "/usr/local/bin/rsync"
+
     test.vm.provider 'virtualbox' do |vb|
       vb.customize ['modifyvm',:id, '--nic1', 'intnet', '--nic2', 'nat'] # swap the networks around
       vb.customize ['modifyvm', :id, '--natpf2', "ssh,tcp,127.0.0.1,10022,,22" ] #port forward
@@ -45,11 +46,6 @@ Vagrant.configure("2") do |config|
       vb.customize ['modifyvm', :id, '--natpf2', "openvpn,tcp,127.0.0.1,11194,,1194" ] # openvpn
       #vb.customize ['modifyvm', :id, '--natpf1', "https,tcp,127.0.0.1,1443,,443" ] #port forward
     end
-
-    # install dev tools
-    test.vm.provision "shell",
-      inline: "pkg update && pkg install -y vim-lite joe nano gnu-watch git tmux screen",
-      run: "once"
 
     # install dev tools
     test.vm.provision "shell",
@@ -64,16 +60,7 @@ Vagrant.configure("2") do |config|
       inline: "echo 'rebooting to apply config' && reboot"
 
     test.vm.provision "sleep-for-reboot", type: "local_shell", command: "echo 'waiting for the reboot' && sleep 50"
-    # this will register our local core from source and let opnsense run from that
-    # test.vm.provision "shell",
-    #   inline: "cd /root/core && make mount",
-    #   run: "once"
 
-    # # that will install our local freeradius plugin version into opnsense
-    # test.vm.provision "shell",
-    #   inline: "cd /root/plugins/net/freeradius && make package && pkg add work/pkg/*.txz"
-
-    # that will install our local freeradius plugin version into opnsense
     test.vm.provision "shell",
       inline: "cd /root/plugin/net/unbound && make package && pkg add work/pkg/*.txz"
   end
