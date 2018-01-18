@@ -1,10 +1,10 @@
 <?php
 
 namespace OPNsense\Unbound\common {
-// yeah, why should plugins.inc.d/openvpn.inc include all the symbols it is using..
-
     require_once("util.inc");
-//require_once("config.inc");
+    // we are not allowed to include this one, otherwise phalconphp will not be able to load controllers anymore
+    // see namespace below
+    //require_once("config.inc");
     require_once("xmlparse.inc");
     require_once("interfaces.inc");
     require_once("plugins.inc.d/unbound.inc");
