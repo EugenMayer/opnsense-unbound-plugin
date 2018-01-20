@@ -34,18 +34,11 @@ class HostEntry
     public $host;
     public $domain;
     public $rr = "A";
-    public $ip;
-    public $mxprio;
-    public $mx;
-    public $descr;
+    public $ip = "";
+    public $mxprio = "";
+    public $mx = "";
+    public $descr = "";
 
-    /**
-     * @param array $ccdAsArray
-     * @return HostEntry
-     */
-    static public function fromModelNode($ccdAsArray)
-    {
-    }
 
     public function toLegacy() {
         return (array)$this;

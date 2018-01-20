@@ -122,15 +122,15 @@ namespace OPNsense\Unbound\common {
          */
         static function getHostEntryByFQDN($host, $domain)
         {
-            $config = Config::getInstance()->object();
-            if (!isset($config->unbound->hosts)) {
+            $config = Config::getInstance()->toArray(listtags());
+            if (!isset($config['unbound']['hosts'])) {
                 return null;
             }
 
-            foreach ($config->unbound->hosts as $hostEntryObject) {
+            foreach ($config['unbound']['hosts'] as $hostEntryLegacy) {
                 // search all hosts for the entry we look for, host and domain must match
-                if ($hostEntryObject->host == $host && $hostEntryObject->domain == $domain) {
-                    return HostEntry::loadFromLegacy((array)$hostEntryObject);
+                if ($hostEntryLegacy['host'] == $host && $hostEntryLegacy['domain'] == $domain) {
+                    return HostEntry::loadFromLegacy($hostEntryLegacy);
                 }
             }
 
@@ -144,14 +144,15 @@ namespace OPNsense\Unbound\common {
         static function getHostEntryByIp($ip)
         {
             // we cannot use toArray since hosts will be unserialized the wrong way
-            $config = Config::getInstance()->object();
-            if (!isset($config->unbound->hosts)) {
+            $config = Config::getInstance()->toArray(listtags());
+            if (!isset($config['unbound']['hosts'])) {
                 return null;
             }
-            foreach ($config->unbound->hosts as $hostEntryObject) {
+
+            foreach ($config['unbound']['hosts'] as $hostEntryLegacy) {
                 // search all hosts for the entry we look for, host and domain must match
-                if ($hostEntryObject->ip == $ip) {
-                    return HostEntry::loadFromLegacy((array)$hostEntryObject);
+                if ($hostEntryLegacy['ip'] == $ip) {
+                    return HostEntry::loadFromLegacy($hostEntryLegacy);
                 }
             }
 
@@ -164,14 +165,15 @@ namespace OPNsense\Unbound\common {
          */
         static function getLegacyHostEntries()
         {
-            $config = Config::getInstance()->object();
-            if (!isset($config->unbound->hosts)) {
+            $config = Config::getInstance()->toArray(listtags());
+            if (!isset($config['unbound']['hosts'])) {
                 return [];
             }
+
             $hostEntries = [];
-            foreach ($config->unbound->hosts as $hostEntryObject) {
+            foreach ($config['unbound']['hosts'] as $hostEntryLegacy) {
                 // search all hosts for the entry we look for, host and domain must match
-                $hostEntries[] = HostEntry::loadFromLegacy((array)$hostEntryObject);
+                $hostEntries[] = HostEntry::loadFromLegacy($hostEntryLegacy);
             }
 
             return $hostEntries;

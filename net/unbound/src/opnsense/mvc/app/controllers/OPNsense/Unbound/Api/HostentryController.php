@@ -27,7 +27,6 @@ class HostentryController extends ApiMutableModelControllerBase
      *   "hostentry": { "host":"newtest", "domain":"mydomain.tld","ip":"10.10.10.1".. }
      * }
      *
-     * @return array
      */
     public function setHostEntryAction()
     {
@@ -35,21 +34,24 @@ class HostentryController extends ApiMutableModelControllerBase
             $dts = $this->request->getPost("hostentry");
 
             if (!HostEntry::validateDTS($dts)) {
-                return ["result" => "failed", 'validation' => "Not all mandatory fields set, you need to set host, domain and ip at least"];
+                http_response_code(400);
+                $this->returnError("Not all mandatory fields set, you need to set host, domain and ip at least");
             }
             $hostEntry = HostEntry::loadFromDTS($dts);
             if (Unbound::existsHostEntryInConfig($hostEntry->host, $hostEntry->domain)) {
                 if (Unbound::updateHostEntryInConfig($hostEntry, true)) {
-                    return array("result" => "updated");
+                    $this->returnData(["fqdn" => "{$hostEntry->host}.{$hostEntry->domain}","op" => "update"]);
                 }
             } else {
                 if (Unbound::createHostEntryInConfig($hostEntry, true)) {
-                    return array("result" => "created");
+                    $this->returnData(["fqdn" => "{$hostEntry->host}.{$hostEntry->domain}","op" => "created"]);
                 }
             }
 
         }
-        return array("result" => "failed");
+
+        http_response_code(500);
+        $this->returnError("only POST is allowed");
     }
 
     /**
@@ -61,7 +63,6 @@ class HostentryController extends ApiMutableModelControllerBase
      *
      * This weired | splitted string is needed since only on parameter is supported on the path
      * @param string|null $hostDomain a string seperating the domain you used from the domain using a | .. so <host>|<domain.tld>
-     * @return array
      */
     public function getHostEntryAction($hostDomain = null)
     {
@@ -83,18 +84,20 @@ class HostentryController extends ApiMutableModelControllerBase
         }
 
         if($host == null && $domain == null) {
-            return Unbound::getLegacyHostEntries();
+            $this->returnData(Unbound::getLegacyHostEntries());
         }
 
         if($host == null && $domain != null || $host != null && $domain == null) {
-            return ["result" => "failed", 'wrong_request' => "you need to set host and domain as url arguments, not just one, e.g: api/unbound/hostentry/getHostEntry/myhostname/mydomain.tld"];
+            http_response_code(400);
+            $this->returnError("you need to set host and domain as url arguments, not just one, e.g: api/unbound/hostentry/getHostEntry/myhostname/mydomain.tld");
         }
         $match = Unbound::getHostEntryByFQDN($host, $domain);
         if($match == NULL) {
-            return [];
+            http_response_code(404);
+            $this->returnError("not found");
         }
         // else
-        return ["hostentry" => $match->toDts()];
+        $this->returnData($match->toDts());
     }
 
     /**
@@ -103,20 +106,20 @@ class HostentryController extends ApiMutableModelControllerBase
      *
      * same as getHostEntryAction, just by ip
      * @param string $ip
-     * @return array
      */
     public function getHostEntryByIpAction($ip)
     {
         if($ip == null) {
-            return Unbound::getLegacyHostEntries();
+            $this->returnData(Unbound::getLegacyHostEntries());
         }
 
         $match = Unbound::getHostEntryByIp($ip);
         if($match == NULL) {
-            return [];
+            http_response_code(404);
+            $this->returnError("not found");
         }
         // else
-        return ["hostentry" => $match->toDts()];
+        $this->returnData($match->toDts());
     }
 
     /**
@@ -129,7 +132,6 @@ class HostentryController extends ApiMutableModelControllerBase
      *
      * Deletes the entry matching the host and domain
      *
-     * @return array
      */
     public function delHostEntryAction()
     {
@@ -137,30 +139,28 @@ class HostentryController extends ApiMutableModelControllerBase
             $dts = $this->request->getPost("hostentry");
 
             if (!isset($dts['host']) || !isset($dts['domain'])) {
-                return ["result" => "failed", 'validation' => "Please set the host and domain field"];
+                http_response_code(400);
+                $this->returnError("Please set the host and domain in the entry");
             }
             $hostEntry = HostEntry::loadFromDTS($dts);
             if (Unbound::existsHostEntryInConfig($hostEntry->host, $hostEntry->domain)) {
                 if (Unbound::deleteHostEntryInConfig($hostEntry, true)) {
-                    return array("result" => "deleted");
+                    $this->returnData(["fqdn" => "{$hostEntry->host}.{$hostEntry->domain}"]);
                 }
             }
             else {
-                return array("result" => "not found");
+                http_response_code(404);
+                $this->returnError("not found");
             }
 
         }
-        return array("result" => "failed");
+        http_response_code(500);
+        $this->returnError("only POST is allowed");
     }
 
     /**
      * Endpoint : POST api/unbound/hostEntry/delHostEntryByIp
      *
-     * Payload must look like this
-     * {
-     *   "hostentry": { "ip": "12.12.12.12"}
-     * }
-     * @return array
      */
     public function delHostEntryByIpAction()
     {
@@ -168,19 +168,46 @@ class HostentryController extends ApiMutableModelControllerBase
             $dts = $this->request->getPost("hostentry");
 
             if (!isset($dts['ip'])) {
-                return ["result" => "failed", 'validation' => "Please set the host entry IP"];
+                http_response_code(400);
+                $this->returnError("Please set the host entry IP");
             }
-            $match = Unbound::getHostEntryByIp($dts['ip']);
-            if ($match!= null) {
-                if (Unbound::deleteHostEntryInConfig($match, true)) {
-                    return array("result" => "updated");
+            $hostEntry = Unbound::getHostEntryByIp($dts['ip']);
+            if ($hostEntry!= null) {
+                http_response_code(404);
+                if (Unbound::deleteHostEntryInConfig($hostEntry, true)) {
+                    $this->returnData(["fqdn" => "{$hostEntry->host}.{$hostEntry->domain}"]);
+                }
+                else {
+                    http_response_code(404);
+                    $this->returnError("not found");
                 }
             }
             else {
-                return array("result" => "not found");
+                http_response_code(404);
+                $this->returnError("not found");
             }
 
         }
-        return array("result" => "failed");
+
+        http_response_code(500);
+        $this->returnError("only POST is allowed");
+    }
+
+    private function returnData($data) {
+        $response = new \stdClass();
+        $response->data = $data;
+        $response->status = 'success';
+        header('Content-type: application/json');
+        echo json_encode($response);
+        exit(0);
+    }
+
+    private function returnError($message) {
+        $response = new \stdClass();
+        $response->status = "error";
+        $response->message = $message;
+        header('Content-type: application/json');
+        echo json_encode($response);
+        exit(0);
     }
 }
