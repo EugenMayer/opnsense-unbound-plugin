@@ -11,7 +11,7 @@ You can for now do:
 ### Installation
 
 ```bash
-export unbound_version=0.0.2
+setenv unbound_version 0.0.2
 curl -Lo os-unbound-devel-${unbound_version}.txz https://github.com/EugenMayer/opnsense-unbound-plugin/raw/master/dist/os-unbound-devel-${unbound_version}.txz
 pkg add os-unbound-devel-${unbound_version}.txz
 ```
