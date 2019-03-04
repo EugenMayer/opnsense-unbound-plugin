@@ -78,6 +78,8 @@ class HostentryController extends ApiMutableModelControllerBase
             }
         }
         else {
+            // with 19.1 those are url encoded now
+            $hostDomain = urldecode($hostDomain);
             $parts = explode('|',$hostDomain);
             $host = $parts[0];
             $domain = $parts[1];

@@ -11,7 +11,7 @@ You can for now do:
 ### Installation
 
 ```bash
-setenv unbound_version 0.0.2
+setenv unbound_version 0.0.3
 curl -Lo os-unbound-devel-${unbound_version}.txz https://github.com/EugenMayer/opnsense-unbound-plugin/raw/master/dist/os-unbound-devel-${unbound_version}.txz
 pkg add os-unbound-devel-${unbound_version}.txz
 ```
@@ -78,6 +78,13 @@ If the hostentry matching the given ip will be deleted
 
 ## Development
 
+## release
+adjust the `net/unbound/Makefile` with the version needed
+- start using `make start`
+- fetch the packages version using `make fetch_dist`
+
+(be sure you have the vagrant scp plugin installed. run `make install_dependencies`
+
 ### Start
 
 No magic involved here, fires up a vagrant build on the recent [opnsense-build](https://app.vagrantup.com/eugenmayer/boxes/opnsense)
@@ -96,10 +103,10 @@ To stop the vm ( not losing state, continue later )
 make stop
 ```
 
-### Rm ( end, remove all )
+### Clean ( end, remove all )
 To remove the VM
 ```
-make rm
+make clean
 ```
 
 ## During development

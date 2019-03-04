@@ -43,13 +43,14 @@ Vagrant.configure("2") do |config|
       vb.customize ['modifyvm',:id, '--nic1', 'intnet', '--nic2', 'nat'] # swap the networks around
       vb.customize ['modifyvm', :id, '--natpf2', "ssh,tcp,127.0.0.1,10022,,22" ] #port forward
       vb.customize ['modifyvm', :id, '--natpf2', "https,tcp,127.0.0.1,10443,,443" ] #port forward
-      vb.customize ['modifyvm', :id, '--natpf2', "openvpn,tcp,127.0.0.1,11194,,1194" ] # openvpn
+      vb.customize ['modifyvm', :id, '--natpf2', "openvpn_tcp,tcp,127.0.0.1,11194,,1194" ] # openvpn tcp
+      vb.customize ['modifyvm', :id, '--natpf2', "openvpn_udp,udp,127.0.0.1,11194,,1194" ] # openvpn udp
       #vb.customize ['modifyvm', :id, '--natpf1', "https,tcp,127.0.0.1,1443,,443" ] #port forward
     end
 
     # install dev tools
     test.vm.provision "shell",
-      inline: "pkg update && pkg install -y vim-lite joe nano gnu-watch git tmux screen",
+      inline: "pkg update && pkg install -y joe nano gnu-watch git tmux screen",
       run: "once"
 
     # replace the public ssh key for the root user with the one vagrant deployed for comms before we restart - or we lock vagrant out
