@@ -1,3 +1,5 @@
+**Discontinued**: OPNsense has a build in unbound API since [22.1](https://docs.opnsense.org/development/api/core/unbound.html). See and implementation with [opnsense-cli](https://github.com/EugenMayer/opnsense-cli)
+
 ## Unbound API for opnsense
 
 This plugins adds the missing API to control unbound using a web-API. Yet not all operations are implemented ( help? ).
